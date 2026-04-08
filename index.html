@@ -1,0 +1,563 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Bus, User, Briefcase, Star, ArrowLeft, CheckCircle2, 
+  MapPin, Clock, CreditCard, Search, GraduationCap, School
+} from 'lucide-react';
+
+// --- Reusable UI Components ---
+
+const Card = ({ title, quote, image, onClick, icon: Icon }) => (
+  <div 
+    onClick={onClick}
+    className="group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-pointer border border-gray-100 flex flex-col h-full"
+  >
+    <div className="h-48 overflow-hidden relative">
+      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all z-10"></div>
+      <img 
+        src={image} 
+        alt={title} 
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+      />
+      {Icon && (
+        <div className="absolute top-4 right-4 bg-white/90 p-2 rounded-full z-20 shadow-md text-blue-600">
+          <Icon size={24} />
+        </div>
+      )}
+    </div>
+    <div className="p-6 flex-grow flex flex-col justify-center">
+      <h3 className="text-xl font-bold text-gray-800 mb-2">{title}</h3>
+      <p className="text-sm text-gray-500 italic border-l-4 border-blue-500 pl-3">"{quote}"</p>
+    </div>
+    <div className="bg-blue-50 py-3 px-6 text-blue-600 font-semibold text-sm flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+      <span>Select Service</span>
+      <span>→</span>
+    </div>
+  </div>
+);
+
+const UtilityCard = ({ title, description, icon: Icon, onClick }) => (
+  <div 
+    onClick={onClick}
+    className="bg-white rounded-xl p-6 shadow-md border border-gray-100 hover:border-blue-300 hover:shadow-lg transition-all cursor-pointer flex items-start space-x-4"
+  >
+    <div className="bg-blue-100 p-3 rounded-lg text-blue-600">
+      <Icon size={24} />
+    </div>
+    <div>
+      <h4 className="font-bold text-gray-800 text-lg">{title}</h4>
+      <p className="text-sm text-gray-500 mt-1">{description}</p>
+    </div>
+  </div>
+);
+
+const InputField = ({ label, type = "text", ...props }) => (
+  <div className="mb-4">
+    <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>
+    <input 
+      type={type}
+      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50 hover:bg-white"
+      {...props}
+    />
+  </div>
+);
+
+const SelectField = ({ label, options, ...props }) => (
+  <div className="mb-4">
+    <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>
+    <select 
+      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50 hover:bg-white"
+      {...props}
+    >
+      <option value="">Select...</option>
+      {options.map((opt, idx) => (
+        <option key={idx} value={opt.value || opt}>{opt.label || opt}</option>
+      ))}
+    </select>
+  </div>
+);
+
+const Notification = ({ message, onClose }) => {
+  if (!message) return null;
+  return (
+    <div className="fixed top-20 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-xl flex items-center space-x-3 animate-bounce">
+      <CheckCircle2 size={24} />
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="ml-4 text-white/80 hover:text-white">✕</button>
+    </div>
+  );
+};
+
+// --- Main Application Component ---
+
+export default function App() {
+  const [view, setView] = useState('home');
+  const [history, setHistory] = useState([]);
+  const [notification, setNotification] = useState('');
+
+  // Routing functions
+  const navigate = (newView) => {
+    setHistory([...history, view]);
+    setView(newView);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goBack = () => {
+    if (history.length === 0) return;
+    const newHistory = [...history];
+    const prevView = newHistory.pop();
+    setHistory(newHistory);
+    setView(prevView);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const showSuccess = (msg) => {
+    setNotification(msg);
+    setTimeout(() => {
+      setNotification('');
+      goBack(); // Auto go back after success
+    }, 3000);
+  };
+
+  const calculateAge = (dobString) => {
+    if (!dobString) return '';
+    const today = new Date();
+    const birthDate = new Date(dobString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // --- View Renderers ---
+
+  const renderHome = () => (
+    <div className="min-h-screen relative flex items-center justify-center">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=1920" 
+          alt="Bus Background" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-black/70 mix-blend-multiply"></div>
+      </div>
+
+      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        <div className="mb-8 inline-block animate-bounce">
+          <Bus size={64} className="text-blue-400 mx-auto" />
+        </div>
+        
+        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 text-white drop-shadow-2xl">
+          <span className="block mb-2">Welcome to</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-emerald-400">
+            Transport E-Pass Portal
+          </span>
+        </h1>
+        
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-white/20 mb-10 shadow-2xl">
+          <p className="text-xl md:text-2xl text-blue-100 italic font-medium">
+            "Safe Journey, Happy Journey. <br className="md:hidden" /> Empowering your daily transit with care and safety."
+          </p>
+        </div>
+        
+        <button 
+          onClick={() => navigate('categories')}
+          className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-blue-600 border border-transparent rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.5)] hover:shadow-[0_0_30px_rgba(37,99,235,0.8)] hover:scale-105"
+        >
+          Explore Services
+          <svg className="w-6 h-6 ml-2 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderCategories = () => (
+    <div className="max-w-6xl mx-auto py-12 px-4 animate-fade-in">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Choose Your Service</h2>
+        <p className="text-gray-600">Select the type of pass that best suits your travel needs.</p>
+      </div>
+
+      {/* Main Categories */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <Card 
+          title="Student Pass Services"
+          quote="Empowering the future, one ride at a time."
+          image="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800"
+          icon={User}
+          onClick={() => navigate('student-options')}
+        />
+        <Card 
+          title="Passenger Pass Services"
+          quote="Your daily commute, simplified and secure."
+          image="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&q=80&w=800"
+          icon={Briefcase}
+          onClick={() => navigate('passenger-form')}
+        />
+        <Card 
+          title="Manpasand Services"
+          quote="Travel in ultimate comfort, arrive in style."
+          image="https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&q=80&w=800"
+          icon={Star}
+          onClick={() => navigate('manpasand-form')}
+        />
+      </div>
+
+      {/* Utilities Section */}
+      <div className="mt-12 border-t pt-12">
+        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Manage Your Pass</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <UtilityCard 
+            title="Renew Bus Pass" 
+            description="Quickly renew your existing pass for the upcoming month or quarter."
+            icon={CreditCard}
+            onClick={() => navigate('renew-form')}
+          />
+          <UtilityCard 
+            title="Track Application Status" 
+            description="Check the current approval status of your recent pass application."
+            icon={Search}
+            onClick={() => navigate('track-form')}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStudentOptions = () => (
+    <div className="max-w-4xl mx-auto py-12 px-4 animate-fade-in">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Student Categories</h2>
+        <p className="text-gray-600">Please select your education level.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div 
+          onClick={() => navigate('school-form')}
+          className="bg-white rounded-2xl shadow-xl overflow-hidden cursor-pointer group hover:shadow-2xl transition-all duration-300 border border-gray-100 transform hover:-translate-y-2"
+        >
+          <div className="bg-gradient-to-br from-blue-400 to-blue-600 p-8 text-center text-white relative overflow-hidden">
+            <School className="mx-auto mb-4 opacity-80 group-hover:scale-110 transition-transform duration-500" size={64} />
+            <h3 className="text-2xl font-bold relative z-10">1st to 12th Standard</h3>
+            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10"></div>
+          </div>
+          <div className="p-6 text-center text-gray-600">
+            For primary and secondary school students. Requires school ID.
+          </div>
+        </div>
+
+        <div 
+          onClick={() => navigate('college-form')}
+          className="bg-white rounded-2xl shadow-xl overflow-hidden cursor-pointer group hover:shadow-2xl transition-all duration-300 border border-gray-100 transform hover:-translate-y-2"
+        >
+          <div className="bg-gradient-to-br from-emerald-400 to-teal-600 p-8 text-center text-white relative overflow-hidden">
+            <GraduationCap className="mx-auto mb-4 opacity-80 group-hover:scale-110 transition-transform duration-500" size={64} />
+            <h3 className="text-2xl font-bold relative z-10">College Students</h3>
+            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10"></div>
+          </div>
+          <div className="p-6 text-center text-gray-600">
+            For university and college attendees. Requires college ID.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSchoolForm = () => (
+    <div className="max-w-2xl mx-auto py-12 px-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="flex items-center space-x-3 mb-6 pb-6 border-b">
+          <div className="bg-blue-100 p-3 rounded-lg"><School className="text-blue-600" /></div>
+          <h2 className="text-2xl font-bold text-gray-800">School Student Application (1-12 Std)</h2>
+        </div>
+        <form onSubmit={(e) => { e.preventDefault(); showSuccess('School Pass Application Submitted Successfully!'); }}>
+          <InputField label="Full Name" placeholder="Enter student's full name" required />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField label="Student ID - CARD Number" placeholder="e.g. SCH-2023-456" required />
+            <InputField label="Date of Birth" type="date" required />
+          </div>
+          <InputField label="School Name" placeholder="Full name of the school" required />
+          <button type="submit" className="w-full mt-6 bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+            Submit Application
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+
+  const renderCollegeForm = () => (
+    <div className="max-w-2xl mx-auto py-12 px-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="flex items-center space-x-3 mb-6 pb-6 border-b">
+          <div className="bg-emerald-100 p-3 rounded-lg"><GraduationCap className="text-emerald-600" /></div>
+          <h2 className="text-2xl font-bold text-gray-800">College Student Application</h2>
+        </div>
+        <form onSubmit={(e) => { e.preventDefault(); showSuccess('College Pass Application Submitted Successfully!'); }}>
+          <InputField label="Full Name" placeholder="Enter student's full name" required />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField label="Student ID Number" placeholder="e.g. COL-ENG-890" required />
+            <InputField label="Date of Birth" type="date" required />
+          </div>
+          <InputField label="College Name" placeholder="Full name of the university/college" required />
+          <button type="submit" className="w-full mt-6 bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200">
+            Submit Application
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+
+  const PassengerFormWithAge = () => {
+    const [dob, setDob] = useState('');
+    const age = calculateAge(dob);
+
+    return (
+      <div className="max-w-2xl mx-auto py-12 px-4 animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <div className="flex items-center space-x-3 mb-6 pb-6 border-b">
+            <div className="bg-purple-100 p-3 rounded-lg"><Briefcase className="text-purple-600" /></div>
+            <h2 className="text-2xl font-bold text-gray-800">Passenger Pass Application</h2>
+          </div>
+          <form onSubmit={(e) => { e.preventDefault(); showSuccess('Passenger Pass Application Submitted Successfully!'); }}>
+            <InputField label="Full Name" placeholder="Enter passenger's full name" required />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InputField 
+                label="Date of Birth" 
+                type="date" 
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                required 
+              />
+              <InputField label="Age (Auto-calculated)" value={age} readOnly className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-600 outline-none" />
+            </div>
+            <InputField label="Mobile Number" type="tel" placeholder="10-digit mobile number" pattern="[0-9]{10}" required />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <SelectField label="ID Proof Type" options={['Aadhar Card', 'PAN Card', 'Voter ID', 'Driving License']} required />
+              <InputField label="ID Number" placeholder="Enter ID number" required />
+            </div>
+            <button type="submit" className="w-full mt-6 bg-purple-600 text-white font-bold py-3 rounded-xl hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200">
+              Submit Application
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  const ManpasandFormWithAge = () => {
+    const [dob, setDob] = useState('');
+    const age = calculateAge(dob);
+
+    return (
+      <div className="max-w-3xl mx-auto py-12 px-4 animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <div className="flex items-center space-x-3 mb-6 pb-6 border-b">
+            <div className="bg-yellow-100 p-3 rounded-lg"><Star className="text-yellow-600" /></div>
+            <h2 className="text-2xl font-bold text-gray-800">Manpasand Luxury Services</h2>
+          </div>
+          <form onSubmit={(e) => { e.preventDefault(); showSuccess('Manpasand Service Requested Successfully!'); }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4 border-r md:pr-6">
+                <h3 className="font-semibold text-gray-600 flex items-center"><User size={18} className="mr-2"/> Personal Details</h3>
+                <InputField label="Full Name" placeholder="Enter full name" required />
+                <div className="grid grid-cols-2 gap-2">
+                  <InputField 
+                    label="Date of Birth" 
+                    type="date" 
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                    required 
+                  />
+                  <InputField label="Age" value={age} readOnly className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-600 outline-none" />
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="font-semibold text-gray-600 flex items-center"><MapPin size={18} className="mr-2"/> Route Details</h3>
+                <SelectField label="Departure Location" options={['Mumbai Central', 'Pune Swargate', 'Nashik CBS', 'Nagpur Bus Stand', 'Aurangabad City']} required />
+                <SelectField label="Arrival Location" options={['Pune Swargate', 'Mumbai Central', 'Nagpur Bus Stand', 'Nashik CBS', 'Aurangabad City']} required />
+                <div className="grid grid-cols-2 gap-2">
+                  <InputField label="Preferred Timing" type="time" required />
+                  <SelectField label="Bus Type" options={['Volvo A/C Sleeper', 'Scania Seater', 'Mercedes Multi-axle']} required />
+                </div>
+              </div>
+            </div>
+            <button type="submit" className="w-full mt-8 bg-yellow-500 text-gray-900 font-bold py-3 rounded-xl hover:bg-yellow-600 transition-colors shadow-lg shadow-yellow-200">
+              Book Manpasand Pass
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRenewForm = () => (
+    <div className="max-w-2xl mx-auto py-12 px-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="flex items-center space-x-3 mb-6 pb-6 border-b">
+          <div className="bg-indigo-100 p-3 rounded-lg"><CreditCard className="text-indigo-600" /></div>
+          <h2 className="text-2xl font-bold text-gray-800">Renew Bus Pass</h2>
+        </div>
+        <form onSubmit={(e) => { e.preventDefault(); showSuccess('Pass Renewed Successfully!'); }}>
+          <div className="flex space-x-4">
+            <div className="flex-grow">
+               <InputField label="Pass Number" placeholder="Enter existing 10-digit Pass Number" required />
+            </div>
+            <div className="mt-7">
+               <button type="button" className="bg-gray-800 text-white px-6 py-2.5 rounded-lg hover:bg-gray-700">Fetch</button>
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
+            <h4 className="text-sm font-semibold text-gray-500 mb-2">Pass Details (Auto-populated)</h4>
+            <p className="text-gray-800"><strong>Name:</strong> John Doe</p>
+            <p className="text-gray-800"><strong>Type:</strong> Passenger Monthly</p>
+            <p className="text-red-500 text-sm mt-1">Status: Expiring in 3 days</p>
+          </div>
+
+          <SelectField label="Renewal Duration" options={['Monthly (1 Month)', 'Quarterly (3 Months)', 'Half-Yearly (6 Months)']} required />
+          <SelectField label="Payment Method" options={['UPI / G-Pay / PhonePe', 'Credit/Debit Card', 'Net Banking']} required />
+          
+          <div className="mt-6 mb-8 flex items-start space-x-3">
+            <input type="checkbox" id="confirm" className="mt-1 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" required />
+            <label htmlFor="confirm" className="text-sm text-gray-600 cursor-pointer">
+              I confirm that the above details are correct and I agree to the terms and conditions of the pass renewal policy.
+            </label>
+          </div>
+
+          <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 flex justify-center items-center">
+            Proceed to Pay ₹850
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+
+  const TrackForm = () => {
+    const [status, setStatus] = useState(null);
+
+    const handleTrack = (e) => {
+      e.preventDefault();
+      // Simulate API call
+      setStatus({
+        id: "APP-98234-XYZ",
+        name: "Rahul Sharma",
+        type: "Student Pass (College)",
+        status: "Approved",
+        validity: "31st Dec 2026",
+        message: "Your card has been dispatched to your institution."
+      });
+    };
+
+    return (
+      <div className="max-w-2xl mx-auto py-12 px-4 animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <div className="flex items-center space-x-3 mb-6 pb-6 border-b">
+            <div className="bg-orange-100 p-3 rounded-lg"><Search className="text-orange-600" /></div>
+            <h2 className="text-2xl font-bold text-gray-800">Track Application Status</h2>
+          </div>
+          
+          <form onSubmit={handleTrack}>
+            <InputField label="Application ID" placeholder="Enter your application reference number" required />
+            <InputField label="Registered Mobile Number" type="tel" placeholder="Enter 10-digit mobile number" required />
+            <button type="submit" className="w-full mt-4 bg-orange-500 text-white font-bold py-3 rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200">
+              Track Status
+            </button>
+          </form>
+
+          {status && (
+            <div className="mt-8 p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 animate-fade-in">
+              <div className="flex items-center text-green-700 mb-4">
+                <CheckCircle2 className="mr-2" />
+                <h3 className="font-bold text-lg">Application Found</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><span className="text-gray-500">App ID:</span> <br/><span className="font-semibold">{status.id}</span></div>
+                <div><span className="text-gray-500">Applicant Name:</span> <br/><span className="font-semibold">{status.name}</span></div>
+                <div><span className="text-gray-500">Pass Type:</span> <br/><span className="font-semibold">{status.type}</span></div>
+                <div><span className="text-gray-500">Current Status:</span> <br/><span className="font-semibold text-green-600 bg-green-100 px-2 py-1 rounded">{status.status}</span></div>
+                <div className="col-span-2 mt-2 pt-2 border-t border-green-200">
+                  <span className="text-gray-500">Remarks:</span> <span className="font-medium text-gray-700">{status.message}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // --- Main Layout ---
+
+  return (
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex flex-col">
+      <Notification message={notification} onClose={() => setNotification('')} />
+
+      {/* Header - Fixed top */}
+      {view !== 'home' && (
+        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={goBack}
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
+                title="Go Back"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div 
+                className="flex items-center space-x-2 font-bold text-xl text-blue-600 cursor-pointer"
+                onClick={() => { setView('home'); setHistory([]); }}
+              >
+                <Bus />
+                <span className="hidden sm:inline">E-Pass Portal</span>
+              </div>
+            </div>
+            
+            <nav className="hidden md:flex space-x-6 text-sm font-medium text-gray-600">
+              <button onClick={() => navigate('categories')} className="hover:text-blue-600">Services</button>
+              <button onClick={() => navigate('renew-form')} className="hover:text-blue-600">Renew Pass</button>
+              <button onClick={() => navigate('track-form')} className="hover:text-blue-600">Track Status</button>
+            </nav>
+          </div>
+        </header>
+      )}
+
+      {/* Dynamic Content Area */}
+      <main className="flex-grow relative">
+        {view === 'home' && renderHome()}
+        {view === 'categories' && renderCategories()}
+        {view === 'student-options' && renderStudentOptions()}
+        {view === 'school-form' && renderSchoolForm()}
+        {view === 'college-form' && renderCollegeForm()}
+        {view === 'passenger-form' && <PassengerFormWithAge />}
+        {view === 'manpasand-form' && <ManpasandFormWithAge />}
+        {view === 'renew-form' && renderRenewForm()}
+        {view === 'track-form' && <TrackForm />}
+      </main>
+
+      {/* Footer */}
+      {view !== 'home' && (
+        <footer className="bg-gray-900 text-gray-400 py-8 text-center text-sm mt-auto">
+          <div className="max-w-4xl mx-auto px-4 flex flex-col items-center">
+            <Bus className="text-gray-600 mb-4" size={32} />
+            <p>"Safe Journey, Happy Journey. Your reliable transit partner."</p>
+            <p className="mt-4 opacity-50">© 2026 Transport E-Pass Portal. All rights reserved.</p>
+          </div>
+        </footer>
+      )}
+
+      {/* Tailwind Custom Animations setup via internal style tag to avoid external CSS requirements */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+      `}} />
+    </div>
+  );
+}
